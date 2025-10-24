@@ -23,6 +23,8 @@ setup(
         # version 0.9.2
         'SQLAlchemy>=0.9.2,<2.0.0',
         'packaging',
+        'importlib-metadata>=4.0; python_version<"3.8"',
+        'importlib-resources>=5.0; python_version<"3.9"',
     ],
     classifiers=[
         "Development Status :: 4 - Beta",

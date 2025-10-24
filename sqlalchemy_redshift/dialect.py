@@ -4,7 +4,6 @@ import re
 from collections import defaultdict, namedtuple
 from logging import getLogger
 
-import pkg_resources
 import sqlalchemy as sa
 from packaging.version import Version
 from sqlalchemy import inspect
@@ -29,6 +28,17 @@ from .commands import (AlterTableAppendCommand, Compression, CopyCommand,
                        RefreshMaterializedView, UnloadFromSelect)
 from .ddl import (CreateMaterializedView, DropMaterializedView,
                   get_table_attributes)
+
+try:
+    from importlib.resources import files as importlib_resources_files
+except ImportError:  # pragma: no cover - Python < 3.9
+    from importlib_resources import files as importlib_resources_files
+
+
+_SSL_CERT_RESOURCE = 'redshift-ca-bundle.crt'
+DEFAULT_SSLROOTCERT_PATH = str(
+    importlib_resources_files('sqlalchemy_redshift').joinpath(_SSL_CERT_RESOURCE)
+)
 
 sa_version = Version(sa.__version__)
 logger = getLogger(__name__)
@@ -69,6 +79,7 @@ __all__ = (
     'TIMESTAMPTZ',
     'TIMETZ',
     'HLLSKETCH',
+    'DEFAULT_SSLROOTCERT_PATH',
 
     'RedshiftDialect', 'RedshiftDialect_psycopg2',
     'RedshiftDialect_psycopg2cffi', 'RedshiftDialect_redshift_connector',
@@ -1212,10 +1223,7 @@ class Psycopg2RedshiftDialectMixin(RedshiftDialectMixin):
         """
         default_args = {
             'sslmode': 'verify-full',
-            'sslrootcert': pkg_resources.resource_filename(
-                __name__,
-                'redshift-ca-bundle.crt'
-            ),
+            'sslrootcert': DEFAULT_SSLROOTCERT_PATH,
         }
         cargs, cparams = (
             super(Psycopg2RedshiftDialectMixin, self).create_connect_args(
